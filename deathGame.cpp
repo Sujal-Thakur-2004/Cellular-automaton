@@ -3,16 +3,40 @@
 #include <limits>
 #include <cstdlib>
 #include <string>
+#include <fstream>
 #define SizeOfBoard 15
 
 using namespace std;
 
 char board[15][15]; // Global char array for the board
 
+
+
+void addToFile(vector<string>& generation) {
+    ifstream inputFile("Automaton.txt");
+    if (inputFile.is_open()) {
+        string line;
+        while (getline(inputFile, line)) {
+            generation.push_back(line);
+        }
+        inputFile.close();
+    } else {
+        cerr << "Error: Unable to open the file 'Automaton.txt' for reading.\n";
+    }
+
+    ofstream outputFile("Automaton.txt");
+    for (string cell : generation) {
+        outputFile << cell << endl;
+    }
+    outputFile.close();
+}
+
 void applyingRule(vector<int> &parentGeneration, int numGenerations)
 {
     vector<int> ruleSet(8);
     string ruleSetInput;
+    vector<string> charGrid;
+    
     while (true)
     {
         cout << "Enter a rule set as an 8-bit binary string (e.g., 00011110) or just give the rule (e.g., 30): ";
@@ -29,10 +53,16 @@ void applyingRule(vector<int> &parentGeneration, int numGenerations)
                 {
                     ruleSet[i] = ruleSetInput[i] - '0';
                 }
+                int decimalValue;
+                decimalValue = stoi(ruleSetInput, nullptr, 2);
+                string whichRule = "Using Rule " + to_string(decimalValue);
+                charGrid.push_back(whichRule);
                 validInput = true;
             }
-            else if (num >= 1 && num <= 256)
+            else if (num >= 1 && num < 256)
             {
+                string whichRule = "Using Rule " + to_string(num);
+                charGrid.push_back(whichRule);
                 string binaryString;
                 while (num > 0)
                 {
@@ -48,6 +78,7 @@ void applyingRule(vector<int> &parentGeneration, int numGenerations)
                 {
                     ruleSet[i] = binaryString[i] - '0';
                 }
+                
                 validInput = true;
             }else {
                 validInput = false;
@@ -168,24 +199,44 @@ void applyingRule(vector<int> &parentGeneration, int numGenerations)
             }
         }
 
+        string parentGenerationString;
         // Print the current generation
         for (int cell : parentGeneration)
         {
             if (cell == 1)
             {
                 cout << " V "; // You can change the character to visualize the output.
+                parentGenerationString = parentGenerationString + " V ";
             }
             else
             {
                 cout << " . ";
+                parentGenerationString = parentGenerationString + " . ";
             }
         }
         cout << endl;
-
+        
+        charGrid.push_back(parentGenerationString);
         // Update the parent generation with the next generation
         parentGeneration = nextGeneration;
     }
+    char choice;
+     while (true) {
+        cout << "Do you want to save the output to a file? (y/n): ";
+        cin >> choice;
+        if (choice == 'y' || choice == 'n') {
+            if(choice == 'y'){
+                addToFile(charGrid);
+            }
+            break;
+        } else {
+            cout << "Invalid input. Please enter 'y' for yes or 'n' for no.\n";
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+    }
 }
+
 
 void CellularAutomaton()
 {
